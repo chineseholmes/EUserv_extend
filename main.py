@@ -12,27 +12,34 @@ PROXIES = {
 }
 
 
-def login(username, password) -> (str, requests.session):
+def login(username: str, password: str) -> (str, requests.session):
     headers = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
                       "Chrome/83.0.4103.116 Safari/537.36",
         "origin": "https://www.euserv.com"
     }
+    url = "https://support.euserv.com/index.iphp"
+    session = requests.Session()
+
+    sess = session.get(url, headers=headers)
+    sess_id = re.findall("PHPSESSID=(\\w{10,100});", str(sess.headers))[0]
+    # 访问png
+    png_url = "https://support.euserv.com/pic/logo_small.png"
+    session.get(png_url, headers=headers)
+
     login_data = {
         "email": username,
         "password": password,
         "form_selected_language": "en",
         "Submit": "Login",
-        "subaction": "login"
+        "subaction": "login",
+        "sess_id": sess_id
     }
-    url = "https://support.euserv.com/index.iphp"
-    session = requests.Session()
     f = session.post(url, headers=headers, data=login_data)
     f.raise_for_status()
+
     if f.text.find('Hello') == -1:
         return '-1', session
-    # print(f.request.url)
-    sess_id = f.request.url[f.request.url.index('=') + 1:len(f.request.url)]
     return sess_id, session
 
 
